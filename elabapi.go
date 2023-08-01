@@ -293,7 +293,7 @@ func PostSection(apiToken string, experimentID int32, section map[string]interfa
 		return 0, err
 	}
 
-	var result int32
+	var result int32 // This is the expJournalID value
 	err = json.Unmarshal(body, &result)
 	if err != nil {
 		// Check if the error is due to the response body not being an int32 value
@@ -304,4 +304,65 @@ func PostSection(apiToken string, experimentID int32, section map[string]interfa
 	}
 
 	return result, nil
+}
+
+// GetExpTextSectionContent retrieves the content of an experiment text section from the ELAB journal
+func GetExpTextSectionContent(apiToken string, expJournalID int32) (string, error) {
+	client := &http.Client{}
+	url := fmt.Sprintf("https://uio.elabjournal.com/api/v1/experiments/sections/%d/content", expJournalID)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Add("Authorization", apiToken)
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	var result string
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
+}
+
+// UpdateExpTextSectionContent updates the content of an experiment text section in the ELAB journal
+func UpdateExpTextSectionContent(apiToken string, expJournalID int32, expJournalMetaID int32, newContent string) error {
+	client := &http.Client{}
+	url := fmt.Sprintf("https://uio.elabjournal.com/api/v1/experiments/sections/%d/content", expJournalID)
+	payload := map[string]interface{}{
+		"contents": newContent,
+		"meta": []map[string]interface{}{
+			{
+				"expJournalMetaID": expJournalMetaID,
+			},
+		},
+	}
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Authorization", apiToken)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
 }
