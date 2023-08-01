@@ -266,3 +266,29 @@ func PostExperiment(apiToken string, experiment map[string]interface{}) (int32, 
 
 	return result, nil
 }
+
+func PostSection(apiToken string, experimentID int32, section map[string]interface{}) error {
+	client := &http.Client{}
+	payload, err := json.Marshal(section)
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("https://uio.elabjournal.com/api/v1/experiments/%d/sections", experimentID)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Authorization", apiToken)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("response Status:", resp.Status)
+	fmt.Println("response Headers:", resp.Header)
+	return nil
+}
