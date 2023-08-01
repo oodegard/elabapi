@@ -235,6 +235,7 @@ func GetExperiments(apiToken string) ([]map[string]interface{}, error) {
 func PostExperiment(apiToken string, experiment map[string]interface{}) (int32, error) {
 	client := &http.Client{}
 	payload, err := json.Marshal(experiment)
+	// fmt.Printf("payload: %v\n", payload)
 	if err != nil {
 		return 0, err
 	}
@@ -257,13 +258,11 @@ func PostExperiment(apiToken string, experiment map[string]interface{}) (int32, 
 		return 0, err
 	}
 
-	var result struct {
-		ExperimentID int32 `json:"experimentID"`
-	}
+	var result int32
 	err = json.Unmarshal(body, &result)
 	if err != nil {
 		return 0, err
 	}
 
-	return result.ExperimentID, nil
+	return result, nil
 }
