@@ -317,7 +317,7 @@ func GetExpTextSectionContent(apiToken string, expJournalID int32) (map[string]i
 
 	req.Header.Add("Authorization", apiToken)
 	resp, err := client.Do(req)
-	if err != nil 
+	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
