@@ -307,28 +307,28 @@ func PostSection(apiToken string, experimentID int32, section map[string]interfa
 }
 
 // GetExpTextSectionContent retrieves the content of an experiment text section from the ELAB journal
-func GetExpTextSectionContent(apiToken string, expJournalID int32) (string, error) {
+func GetExpTextSectionContent(apiToken string, expJournalID int32) (map[string]interface{}, error) {
 	client := &http.Client{}
 	url := fmt.Sprintf("https://uio.elabjournal.com/api/v1/experiments/sections/%d/content", expJournalID)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	req.Header.Add("Authorization", apiToken)
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	var result string
+	var result map[string]interface{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	return result, nil
