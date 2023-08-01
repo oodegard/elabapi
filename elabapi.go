@@ -317,7 +317,7 @@ func GetExpTextSectionContent(apiToken string, expJournalID int32) (map[string]i
 
 	req.Header.Add("Authorization", apiToken)
 	resp, err := client.Do(req)
-	if err != nil {
+	if err != nil 
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -335,18 +335,10 @@ func GetExpTextSectionContent(apiToken string, expJournalID int32) (map[string]i
 }
 
 // UpdateExpTextSectionContent updates the content of an experiment text section in the ELAB journal
-func UpdateExpTextSectionContent(apiToken string, expJournalID int32, expJournalMetaID int32, newContent string) error {
+func UpdateExpTextSectionContent(apiToken string, expJournalID int32, data map[string]interface{}) error {
 	client := &http.Client{}
 	url := fmt.Sprintf("https://uio.elabjournal.com/api/v1/experiments/sections/%d/content", expJournalID)
-	payload := map[string]interface{}{
-		"contents": newContent,
-		"meta": []map[string]interface{}{
-			{
-				"expJournalMetaID": expJournalMetaID,
-			},
-		},
-	}
-	payloadBytes, err := json.Marshal(payload)
+	payloadBytes, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
