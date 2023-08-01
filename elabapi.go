@@ -267,28 +267,41 @@ func PostExperiment(apiToken string, experiment map[string]interface{}) (int32, 
 	return result, nil
 }
 
-func PostSection(apiToken string, experimentID int32, section map[string]interface{}) error {
+func PostSection(apiToken string, experimentID int32, section map[string]interface{}) (int32, error) {
 	client := &http.Client{}
 	payload, err := json.Marshal(section)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	url := fmt.Sprintf("https://uio.elabjournal.com/api/v1/experiments/%d/sections", experimentID)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	req.Header.Add("Authorization", apiToken)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer resp.Body.Close()
 
-	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
-	return nil
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+
+	var result int32
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		// Check if the error is due to the response body not being an int32 value
+		if _, ok := err.(*json.UnmarshalTypeError); ok {
+			return 0, fmt.Errorf("unexpected response format: %s", string(body))
+		}
+		return 0, err
+	}
+
+	return result, nil
 }
