@@ -232,28 +232,38 @@ func GetExperiments(apiToken string) ([]map[string]interface{}, error) {
 	return experiments, nil
 }
 
-func PostExperiment(apiToken string) error {
+func PostExperiment(apiToken string, experiment map[string]interface{}) (int32, error) {
 	client := &http.Client{}
-	data := map[string]string{"name": "New Experiment"}
-	payload, err := json.Marshal(data)
+	payload, err := json.Marshal(experiment)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	req, err := http.NewRequest("POST", "https://uio.elabjournal.com/api/v1/experiments", bytes.NewBuffer(payload))
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	req.Header.Add("Authorization", apiToken)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer resp.Body.Close()
 
-	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
-	return nil
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+
+	var result struct {
+		ExperimentID int32 `json:"experimentID"`
+	}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return 0, err
+	}
+
+	return result.ExperimentID, nil
 }
