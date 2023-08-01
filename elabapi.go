@@ -146,6 +146,15 @@ func GetSampleMeta(apiToken string, sampleID int) ([]map[string]interface{}, err
 	return metaFields, nil
 }
 
+type APIError struct {
+	Message string
+	Errors  []string
+}
+
+func (e *APIError) Error() string {
+	return fmt.Sprintf("API error: %s", e.Message)
+}
+
 func PostSample(apiToken string, sample map[string]interface{}) (int32, error) {
 	fmt.Println("Creating new sample...")
 	client := &http.Client{}
@@ -178,6 +187,10 @@ func PostSample(apiToken string, sample map[string]interface{}) (int32, error) {
 	var result int32
 	err = json.Unmarshal(body, &result)
 	if err != nil {
+		var apiErr APIError
+		if json.Unmarshal(body, &apiErr) == nil {
+			return 0, &apiErr
+		}
 		fmt.Println("Error unmarshaling response body:", err)
 		return 0, err
 	}
