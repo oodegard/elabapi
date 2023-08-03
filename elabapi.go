@@ -334,6 +334,47 @@ func GetExpTextSectionContent(apiToken string, expJournalID int32) (map[string]i
 	return result, nil
 }
 
+func GetExperimentSections(apiToken string, experimentID int) ([]map[string]interface{}, error) {
+	// Create a new HTTP request to retrieve the list of sections for the specified experiment
+	url := fmt.Sprintf("https://uio.elabjournal.com/api/v1/experiments/%d/sections", experimentID)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set the necessary headers on the request
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiToken))
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Check the response status code
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	// Read the response body
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal the JSON response into a slice of maps
+	var sections []map[string]interface{}
+	err = json.Unmarshal(responseBody, &sections)
+	if err != nil {
+		return nil, err
+	}
+
+	return sections, nil
+}
+
 // UpdateExpTextSectionContent updates the content of an experiment text section in the ELAB journal
 func UpdateExpTextSectionContent(apiToken string, expJournalID int32, data map[string]interface{}) error {
 	client := &http.Client{}
