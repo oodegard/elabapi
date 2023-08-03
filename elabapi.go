@@ -332,67 +332,18 @@ func GetExpTextSectionContent(apiToken string, expJournalID int32) (map[string]i
 	return result, nil
 }
 
-func GetExperimentSections(apiToken string, experimentID int) ([]map[string]interface{}, error) {
-	// Create a new HTTP request to retrieve the list of sections for the specified experiment
-	url := fmt.Sprintf("https://uio.elabjournal.com/api/v1/experiments/%d/sections", experimentID)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// Set the necessary headers on the request
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiToken))
-
-	// Send the request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Check the response status code
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	// Read the response body
-	responseBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	// Unmarshal the JSON response into a map
-	var response map[string]interface{}
-	err = json.Unmarshal(responseBody, &response)
-	if err != nil {
-		return nil, err
-	}
-
-	// Extract the sections from the response map
-	sections, ok := response["sections"].([]map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("invalid sections format")
-	}
-
-	return sections, nil
-}
-
 // UpdateExpTextSectionContent updates the content of an experiment text section in the ELAB journal
-func UpdateExpTextSectionContent(apiToken string, expJournalID int32, data map[string]interface{}) error {
+func UpdateExperimentSection(apiToken string, expJournalID int32, data map[string]interface{}) error {
 	client := &http.Client{}
 	url := fmt.Sprintf("https://uio.elabjournal.com/api/v1/experiments/sections/%d/content", expJournalID)
-	payloadBytes, err := json.Marshal(data)
+	payloadJSON, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
-
-	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(payloadBytes))
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(payloadJSON))
 	if err != nil {
 		return err
 	}
-
 	req.Header.Add("Authorization", apiToken)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
@@ -400,7 +351,6 @@ func UpdateExpTextSectionContent(apiToken string, expJournalID int32, data map[s
 		return err
 	}
 	defer resp.Body.Close()
-
 	return nil
 }
 
