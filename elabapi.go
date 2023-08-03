@@ -17,6 +17,14 @@ func ApiTest() {
 // If the sampleTypeID argument is nil, the function will retrieve all samples.
 
 // Functions that work with samples
+type APIError struct {
+	Message string
+	Errors  []string
+}
+
+func (e *APIError) Error() string {
+	return fmt.Sprintf("API error: %s", e.Message)
+}
 
 func GetSamples(apiToken string, sampleTypeID *string) ([]map[string]interface{}, error) {
 	client := &http.Client{}
@@ -146,15 +154,6 @@ func GetSampleMeta(apiToken string, sampleID int) ([]map[string]interface{}, err
 	return metaFields, nil
 }
 
-type APIError struct {
-	Message string
-	Errors  []string
-}
-
-func (e *APIError) Error() string {
-	return fmt.Sprintf("API error: %s", e.Message)
-}
-
 func PostSample(apiToken string, sample map[string]interface{}) (int32, error) {
 	fmt.Println("Creating new sample...")
 	client := &http.Client{}
@@ -199,7 +198,6 @@ func PostSample(apiToken string, sample map[string]interface{}) (int32, error) {
 }
 
 // Functions that work with the ELAB journal
-
 func GetExperiments(apiToken string) ([]map[string]interface{}, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", "https://uio.elabjournal.com/api/v1/experiments", nil)
@@ -365,11 +363,17 @@ func GetExperimentSections(apiToken string, experimentID int) ([]map[string]inte
 		return nil, err
 	}
 
-	// Unmarshal the JSON response into a slice of maps
-	var sections []map[string]interface{}
-	err = json.Unmarshal(responseBody, &sections)
+	// Unmarshal the JSON response into a map
+	var response map[string]interface{}
+	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, err
+	}
+
+	// Extract the sections from the response map
+	sections, ok := response["sections"].([]map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid sections format")
 	}
 
 	return sections, nil
