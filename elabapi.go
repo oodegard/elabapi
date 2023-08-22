@@ -197,8 +197,8 @@ func PostSample(apiToken string, sample map[string]interface{}) (int32, error) {
 	return result, nil
 }
 
-// Functions that work with the ELAB journal
-func GetExperiments(apiToken string) ([]map[string]interface{}, error) {
+// GetExperiments retrieves a list of experiments from the ELAB journal API with optional filters
+func GetExperiments(apiToken string, filters map[string]string) ([]map[string]interface{}, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", "https://uio.elabjournal.com/api/v1/experiments", nil)
 	if err != nil {
@@ -206,6 +206,14 @@ func GetExperiments(apiToken string) ([]map[string]interface{}, error) {
 	}
 
 	req.Header.Add("Authorization", apiToken)
+
+	// Add optional filters as query parameters
+	q := req.URL.Query()
+	for k, v := range filters {
+		q.Add(k, v)
+	}
+	req.URL.RawQuery = q.Encode()
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
