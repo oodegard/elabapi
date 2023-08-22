@@ -427,6 +427,43 @@ func ListFiles(apiToken string, filters map[string]string) (map[string]interface
 	return result, nil
 }
 
+// Studies
+// ListStudies retrieves a list of studies from the ELAB journal API with optional filters
+func ListStudies(apiToken string, filters map[string]string) (map[string]interface{}, error) {
+	client := &http.Client{}
+	url := "https://uio.elabjournal.com/api/v1/studies"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Authorization", apiToken)
+
+	// Add optional filters as query parameters
+	q := req.URL.Query()
+	for k, v := range filters {
+		q.Add(k, v)
+	}
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var result map[string]interface{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
 /* Example use
 # Use without filters
 files, err := ListFiles(apiToken, map[string]string{})
