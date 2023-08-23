@@ -349,6 +349,30 @@ func GetExperimentSections(apiToken string, experimentID int32, filters map[stri
 	return sections, nil
 }
 
+// GetExperimentSectionHTML retrieves the HTML of an experiment section from the ELAB journal API
+func GetExperimentSectionHTML(apiToken string, expJournalID string) (string, error) {
+	client := &http.Client{}
+	url := fmt.Sprintf("https://uio.elabjournal.com/api/v1/experiments/sections/%s/html", expJournalID)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Add("Authorization", apiToken)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
+}
+
 // GetExpTextSectionContent retrieves the content of an experiment text section from the ELAB journal
 func GetExpTextSectionContent(apiToken string, expJournalID int32) (map[string]interface{}, error) {
 	client := &http.Client{}
