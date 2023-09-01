@@ -423,6 +423,31 @@ func UpdateExperimentSection(apiToken string, expJournalID int32, data map[strin
 	return nil
 }
 
+// UpdateExperimentSectionHTML updates the HTML content of an experiment text section in the ELAB journal
+func UpdateExperimentSectionHTML(apiToken string, expJournalID int32, htmlContent string) error {
+	client := &http.Client{}
+	url := fmt.Sprintf("https://uio.elabjournal.com/api/v1/experiments/sections/%d/html", expJournalID)
+	data := map[string]interface{}{
+		"html": htmlContent,
+	}
+	payloadJSON, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(payloadJSON))
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Authorization", apiToken)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return nil
+}
+
 // ListFiles retrieves a list of files from the ELAB journal API with optional filters
 func ListFiles(apiToken string, filters map[string]string) (map[string]interface{}, error) {
 	client := &http.Client{}
