@@ -401,6 +401,50 @@ func GetExpTextSectionContent(apiToken string, expJournalID int32) (map[string]i
 	return result, nil
 }
 
+func GetExperimentSamples(apiToken string, expJournalID int32, filters map[string]string) ([]map[string]interface{}, error) {
+	/*
+		This function will send a GET request to the specified URL and return a list of samples from a SAMPLESIN or SAMPLESOUT section.
+		The filters parameter allows you to add optional query parameters to the request.
+		The function will return an error if it fails to send the request or parse the response.
+	*/
+
+	client := &http.Client{}
+	url := fmt.Sprintf("https://uio.elabjournal.com/api/v1/experiments/sections/%d/samples", expJournalID)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", apiToken)
+
+	// Add optional filters as query parameters
+	q := req.URL.Query()
+	for k, v := range filters {
+		q.Add(k, v)
+	}
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var result map[string]interface{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return nil, err
+	}
+	data := result["data"].([]interface{})
+	samples := make([]map[string]interface{}, len(data))
+	for i, sample := range data {
+		samples[i] = sample.(map[string]interface{})
+	}
+	return samples, nil
+}
+
 // UpdateExpTextSectionContent updates the content of an experiment text section in the ELAB journal
 func UpdateExperimentSection(apiToken string, expJournalID int32, data map[string]interface{}) error {
 	client := &http.Client{}
