@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/tealeg/xlsx"
 )
 
 func ApiTest() {
@@ -347,6 +349,48 @@ func GetExperimentSections(apiToken string, experimentID int32, filters map[stri
 		sections[i] = section.(map[string]interface{})
 	}
 	return sections, nil
+}
+func GetExperimentSectionExcel(apiToken string, expJournalID int32) ([][]string, error) {
+	client := &http.Client{}
+	url := fmt.Sprintf("https://uio.elabjournal.com/api/v1/experiments/sections/%d/excel", expJournalID)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", apiToken)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected server response: %s", resp.Status)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := xlsx.OpenBinary(body)
+	if err != nil {
+		return nil, err
+	}
+
+	var excelData [][]string
+	for _, sheet := range file.Sheets {
+		for _, row := range sheet.Rows {
+			var vals []string
+			for _, cell := range row.Cells {
+				vals = append(vals, cell.String())
+			}
+			excelData = append(excelData, vals)
+		}
+	}
+
+	return excelData, nil
 }
 
 // GetExperimentSectionHTML retrieves the HTML of an experiment section from the ELAB journal API
