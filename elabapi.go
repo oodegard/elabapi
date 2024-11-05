@@ -10,6 +10,34 @@ import (
 	"github.com/tealeg/xlsx"
 )
 
+// SampleMeta structure to match JSON request
+type SampleMeta struct {
+	SampleTypeMetaID int    `json:"sampleTypeMetaID"`
+	SampleDataType   string `json:"sampleDataType"`
+	Key              string `json:"key"`
+	Value            string `json:"value"`
+	ChemicalFile     string `json:"chemicalFile"`
+}
+
+type SampleData struct {
+	SampleMetas    []SampleMeta `json:"sampleMetas"`
+	SampleTypeID   int          `json:"sampleTypeID"`
+	CheckedOut     bool         `json:"checkedOut"`
+	ParentSampleID int          `json:"parentSampleID"`
+	Name           string       `json:"name"`
+	Description    string       `json:"description"`
+	Note           string       `json:"note"`
+	AltID          string       `json:"altID"`
+	StorageLayerID int          `json:"storageLayerID"`
+	Position       int          `json:"position"`
+}
+
+type Metadata struct {
+	SampleTypeMetaID int    `json:"sampleTypeMetaID"`
+	Key              string `json:"key"`
+	SampleDataType   string `json:"sampleDataType"`
+}
+
 func ApiTest() {
 	fmt.Println("This is a test")
 }
@@ -638,6 +666,39 @@ func ListSampleTypes(apiToken string, filters map[string]string) (map[string]int
 	}
 	req.URL.RawQuery = q.Encode()
 
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error response from server: %s", resp.Status)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body: %v", err)
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshaling response body: %v", err)
+	}
+
+	return result, nil
+}
+
+func fetchSampleTypeMetaDetails(apiToken, sampleTypeID string) (map[string]interface{}, error) {
+	client := &http.Client{}
+	url := fmt.Sprintf("https://uio.elabjournal.com/api/v1/sampleTypes/%s/meta", sampleTypeID)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %v", err)
+	}
+
+	req.Header.Add("Authorization", apiToken)
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %v", err)
