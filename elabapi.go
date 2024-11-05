@@ -690,7 +690,7 @@ func ListSampleTypes(apiToken string, filters map[string]string) (map[string]int
 	return result, nil
 }
 
-func fetchSampleTypeMetaDetails(apiToken, sampleTypeID string) (map[string]interface{}, error) {
+func FetchSampleTypeMetaDetails(apiToken, sampleTypeID string) (map[string]interface{}, error) {
 	client := &http.Client{}
 	url := fmt.Sprintf("https://uio.elabjournal.com/api/v1/sampleTypes/%s/meta", sampleTypeID)
 	req, err := http.NewRequest("GET", url, nil)
