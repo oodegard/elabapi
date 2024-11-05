@@ -183,7 +183,43 @@ func GetSampleMeta(apiToken string, sampleID int) ([]map[string]interface{}, err
 	// fmt.Printf("metaFields: %v\n", metaFields)
 	return metaFields, nil
 }
+func PostSample(apiToken string, sample SampleData) error {
+	client := &http.Client{}
+	payload, err := json.Marshal(sample)
+	if err != nil {
+		return err
+	}
 
+	// Add the autoCreateMetaDefaults=true query parameter
+	url := "https://uio.elabjournal.com/api/v1/samples?autoCreateMetaDefaults=true"
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Authorization", apiToken)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected response status: %s, body: %s", resp.Status, string(body))
+	}
+
+	fmt.Printf("POST request successful: %s\n", string(body))
+	return nil
+}
+
+// THis is now deprecated and replaced by PostSample above
+/*
 func PostSample(apiToken string, sample map[string]interface{}) (int32, error) {
 	fmt.Println("Creating new sample...")
 	client := &http.Client{}
@@ -226,6 +262,7 @@ func PostSample(apiToken string, sample map[string]interface{}) (int32, error) {
 	fmt.Println("New sample ID:", result)
 	return result, nil
 }
+*/
 
 // GetExperiments retrieves a list of experiments from the ELAB journal API with optional filters
 func GetExperiments(apiToken string, filters map[string]string) ([]map[string]interface{}, error) {
